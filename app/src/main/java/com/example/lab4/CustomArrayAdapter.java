@@ -40,7 +40,7 @@ public class CustomArrayAdapter extends ArrayAdapter {
         TextView title = view.findViewById(R.id.note_title);
         title.setText(rssFeedModels.get(position).title);
         TextView body = view.findViewById(R.id.note_body);
-        if (rssFeedModels.get(position).description != null && rssFeedModels.get(position).description.length() >= 200)
+        if (rssFeedModels.get(position).description != null && rssFeedModels.get(position).description.length() >= 400)
             body.setText(rssFeedModels.get(position).description.substring(0, 400));
         else
             body.setText(rssFeedModels.get(position).description);
@@ -61,7 +61,7 @@ public class CustomArrayAdapter extends ArrayAdapter {
                             .resize(100, 100).into(image);
                 }
                 catch (Exception e) {
-
+                    int a = 2;
                 }
             }
         }

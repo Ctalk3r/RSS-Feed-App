@@ -101,4 +101,8 @@ public class DatabaseQueries {
         removeRSSModel(rssFeedModel.id);
         insert(rssFeedModel);
     }
+
+    public void clear() {
+        db.execSQL("DELETE FROM " + DatabaseHelper.TABLE_RSSModel);
+    }
 }

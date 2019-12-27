@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "databasename.db";
-    private static final int SCHEMA = 15;
+    private static final int SCHEMA = 16;
 
     public static final String TABLE_RSSModel = "RSS_model";
     public static final String COLUMN_ID_RSSModel = "_id";

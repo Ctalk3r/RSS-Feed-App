@@ -91,7 +91,7 @@ public class XmlParser {
                 description = parseText(tagText);
             } else if (tag.equals("link")) {
                 link = readTag(parser, "link");
-            } else if (tag.equals("image")) {
+            } else if (tag.equals("enclosure")) {
                 image = readImage(parser, tag);
             } else if (tag.equals("media:thumbnail")) {
                 image = readImage(parser, tag);
@@ -157,6 +157,7 @@ public class XmlParser {
         dirtyText = dirtyText.replace(">", "");
         dirtyText = dirtyText.replace("<", "");
         dirtyText = dirtyText.replace(" . ", "");
+        dirtyText = dirtyText.replace("\r.", ".");
         return dirtyText;
     }
 

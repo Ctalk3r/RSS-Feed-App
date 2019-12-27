@@ -328,8 +328,9 @@ public class MainActivity extends AppCompatActivity implements NetworkStateRecei
             mSwipeLayout.setRefreshing(false);
 
             if (success) {
-                for (RssFeedModel rssFeedModel : mFeedModelList.subList(mFeedModelList.size() - 10, mFeedModelList.size())) {
-                    databaseQueries.insert(rssFeedModel);
+                databaseQueries.clear();
+                for (int i = mFeedModelList.size() - 1; i >= mFeedModelList.size() - 10; i--) {
+                    mFeedModelList.get(i).id = databaseQueries.insert(mFeedModelList.get(i));
                 }
                 // Fill Views
                 customArrayAdapter = new CustomArrayAdapter(MainActivity.this, mFeedModelList, networkButton);
