@@ -2,6 +2,7 @@ package com.example.lab4;
 
 import android.Manifest;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -14,6 +15,8 @@ import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
@@ -38,6 +41,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 
+import static java.lang.Math.min;
+
 
 public class MainActivity extends AppCompatActivity implements NetworkStateReceiver.NetworkStateReceiverListener {
 
@@ -57,12 +62,12 @@ public class MainActivity extends AppCompatActivity implements NetworkStateRecei
     public MainActivity() {
     }
 
-    void showDialog() {
+    void showDialog(boolean cancelable) {
         final AlertDialog dialog = new AlertDialog.Builder(this)
                 .setView(R.layout.dialog_layout)
                 .setTitle("RSS feed url")
                 .setPositiveButton("Set", null)
-                .setCancelable(false)
+                .setCancelable(cancelable)
                 .create();
         dialog.setOnShowListener(new DialogInterface.OnShowListener() {
             @Override
@@ -107,7 +112,7 @@ public class MainActivity extends AppCompatActivity implements NetworkStateRecei
         }
         else {
             getSupportActionBar().setTitle("RSS reader");
-            showDialog();
+            showDialog(false);
         }
         if (pref.contains("Feed") && !TextUtils.isEmpty(pref.getString("Feed", "")))
             getSupportActionBar().setTitle("RSS feed = " + pref.getString("Feed", "").replace("https://", "").replace("http://", "").replace("www.", ""));
@@ -120,19 +125,19 @@ public class MainActivity extends AppCompatActivity implements NetworkStateRecei
         // String currentDate = sdf.format(new Date());
         ArrayList<RssFeedModel> array = databaseQueries.getRSSModels();
         customArrayAdapter = new CustomArrayAdapter(this, array, networkButton);
-        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
-        {
+       // if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
+       // {
             ListView listView = findViewById(R.id.listview);
             listView.setAdapter(customArrayAdapter);
 
             adapterView = listView;
-        }
+        /*}
         else
         {
             GridView gridView = findViewById(R.id.gridview);
             gridView.setAdapter(customArrayAdapter);
             adapterView = gridView;
-        }
+        }*/
 
 
         adapterView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
@@ -143,7 +148,12 @@ public class MainActivity extends AppCompatActivity implements NetworkStateRecei
                 if (rssFeedModel != null)
                 {
                     Intent intent = new Intent(getApplicationContext(), RssWebViewActivity.class);
-                    intent.putExtra("_id", rssFeedModel.id);
+                    //intent.putExtra("_id", rssFeedModel.id);
+
+                    //int pos = mFeedModelList.indexOf(rssFeedModel);
+                    intent.putExtra("pos", position);
+                    intent.putExtra("link", rssFeedModel.link);
+                    intent.putExtra("connected", isConnected);
                     startActivityForResult(intent, requestCode);
                 }
             }
@@ -151,10 +161,11 @@ public class MainActivity extends AppCompatActivity implements NetworkStateRecei
 
 
         mSwipeLayout = findViewById(R.id.swipeRefreshLayout);
+        final Context context = this;
         mSwipeLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                new FetchFeedTask().execute((Void) null);
+                new FetchFeedTask(context).execute((Void) null);
             }
         });
 
@@ -198,6 +209,7 @@ public class MainActivity extends AppCompatActivity implements NetworkStateRecei
 
     @Override
     public void networkAvailable() {
+        Toast.makeText(MainActivity.this, "Internet available", Toast.LENGTH_SHORT).show();
         isConnected = true;
         networkButton.setVisibility(View.INVISIBLE);
     }
@@ -223,7 +235,7 @@ public class MainActivity extends AppCompatActivity implements NetworkStateRecei
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.edit) {
-            showDialog();
+            showDialog(true);
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -280,6 +292,13 @@ public class MainActivity extends AppCompatActivity implements NetworkStateRecei
     private class FetchFeedTask extends AsyncTask<Void, Void, Boolean> {
 
         private String urlLink;
+        private Context context;
+        private ArrayList<WebView> webViews = new ArrayList<>();
+
+        public FetchFeedTask(Context context)
+        {
+            this.context = context;
+        }
 
         @Override
         protected void onPreExecute() {
@@ -329,24 +348,38 @@ public class MainActivity extends AppCompatActivity implements NetworkStateRecei
 
             if (success) {
                 databaseQueries.clear();
-                for (int i = mFeedModelList.size() - 1; i >= mFeedModelList.size() - 10; i--) {
-                    mFeedModelList.get(i).id = databaseQueries.insert(mFeedModelList.get(i));
+                databaseQueries.clear();
+                for (int i = 0; i < mFeedModelList.size(); i++) {
+                    if (i <= 10)
+                        mFeedModelList.get(i).id = databaseQueries.insert(mFeedModelList.get(i));
+                    WebView view = new WebView(context);
+                    final int k = i;
+                    view.setWebViewClient(new WebViewClient()
+                    {
+                        @Override
+                        public void onPageFinished(WebView view, String url)
+                        {
+                            view.saveWebArchive(context.getFilesDir().getAbsolutePath() + File.separator + k + ".mht");
+                        }
+                    });
+                    view.loadUrl(mFeedModelList.get(i).link);
+                    webViews.add(view);
                 }
                 // Fill Views
                 customArrayAdapter = new CustomArrayAdapter(MainActivity.this, mFeedModelList, networkButton);
-                if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
-                {
+                // if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
+                // {
                     ListView listView = findViewById(R.id.listview);
                     listView.setAdapter(customArrayAdapter);
 
                     adapterView = listView;
-                }
+                /* }
                 else
                 {
                     GridView gridView = findViewById(R.id.gridview);
                     gridView.setAdapter(customArrayAdapter);
                     adapterView = gridView;
-                }
+                }*/
             } else if (isConnected){
                 Toast.makeText(MainActivity.this,
                         "Enter a valid Rss feed url",
@@ -407,7 +440,7 @@ public class MainActivity extends AppCompatActivity implements NetworkStateRecei
         } else {
             dir.mkdir();
         }
-        for (RssFeedModel rssFeedModel : result.subList(result.size() - 10, result.size())) {
+        for (RssFeedModel rssFeedModel : result.subList(0, min(result.size(), 11))) {
             try {
                 URL image = new URL(rssFeedModel.image);
                 InputStream inputStream = (InputStream) image.getContent();
@@ -447,4 +480,5 @@ public class MainActivity extends AppCompatActivity implements NetworkStateRecei
             }
         }
     }*/
+
 }

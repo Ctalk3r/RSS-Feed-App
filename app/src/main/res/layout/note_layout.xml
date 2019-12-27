@@ -27,7 +27,6 @@
                 android:id="@+id/note_title"
                 android:textAlignment="center"
                 android:textStyle="bold"
-                android:layout_marginEnd="-35dp"
                 android:textSize="15sp"
                 android:gravity="center_horizontal|center_vertical"
                 android:layout_width="0dp" />

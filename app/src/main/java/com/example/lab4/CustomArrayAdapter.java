@@ -2,6 +2,7 @@ package com.example.lab4;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.ScaleDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -53,12 +54,14 @@ public class CustomArrayAdapter extends ArrayAdapter {
                 String url = rssFeedModels.get(position).image;
                 String fileName = url.substring(url.lastIndexOf('/') + 1, url.length() );
                 String path = context.getCacheDir().toString() + File.separator + "images" + File.separator + fileName;
-                image.setImageDrawable(Drawable.createFromPath(path));
+                Drawable d = Drawable.createFromPath(path);
+
+                image.setImageDrawable(d);
             } else {
                 try {
                     Picasso.get()
                             .load(rssFeedModels.get(position).image)
-                            .resize(100, 100).into(image);
+                            .resize(150, 100).into(image);
                 }
                 catch (Exception e) {
                     int a = 2;

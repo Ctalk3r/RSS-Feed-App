@@ -49,7 +49,6 @@ public class XmlParser {
         }
         int depth = 1;
 
-
         while (depth != 0) {
             switch (parser.next()) {
                 case XmlPullParser.END_TAG:
@@ -157,7 +156,7 @@ public class XmlParser {
         dirtyText = dirtyText.replace(">", "");
         dirtyText = dirtyText.replace("<", "");
         dirtyText = dirtyText.replace(" . ", "");
-        dirtyText = dirtyText.replace("\r.", ".");
+        dirtyText = dirtyText.replace("\n.", ".");
         return dirtyText;
     }
 
